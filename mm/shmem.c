@@ -4316,8 +4316,7 @@ static struct file *__shmem_file_setup(const char *name, loff_t size,
 	if (IS_ERR(res))
 		goto put_path;
 
-	res = alloc_file(&path, FMODE_WRITE | FMODE_READ,
-		  &shmem_file_operations);
+	res = alloc_file(&path, O_RDWR, &shmem_file_operations);
 	if (IS_ERR(res))
 		goto put_path;
 

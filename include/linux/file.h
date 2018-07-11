@@ -20,7 +20,7 @@ struct vfsmount;
 struct dentry;
 struct path;
 struct inode;
-extern struct file *alloc_file(const struct path *, fmode_t mode,
+extern struct file *alloc_file(const struct path *, int flags,
 	const struct file_operations *fop);
 extern struct file *alloc_file_pseudo(struct inode *, struct vfsmount *,
 	const char *, int flags, const struct file_operations *);
