@@ -35,7 +35,7 @@ bool use_new_tzar;
 __asm__ (
   ".section .init.data,\"aw\"\n"
   "tzdev_tzar_begin:\n"
-  ".incbin \"" KBUILD_SRC "/drivers/misc/tzdev/startup.tzar\"\n"
+  ".incbin \"startup.tzar\"\n"
   "tzdev_tzar_end:\n"
   ".previous\n"
 );
@@ -44,7 +44,7 @@ extern char tzdev_tzar_begin[], tzdev_tzar_end[];
 __asm__ (
   ".section .init.data,\"aw\"\n"
   "tzdev_old_tzar_begin:\n"
-  ".incbin \"" KBUILD_SRC "/drivers/misc/tzdev/startup_old.tzar\"\n"
+  ".incbin \"startup_old.tzar\"\n"
   "tzdev_old_tzar_end:\n"
   ".previous\n"
 );
