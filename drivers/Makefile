@@ -225,6 +225,9 @@ obj-y				+= sensors/
 # Fingerprint sensor
 obj-$(CONFIG_SENSORS_FINGERPRINT)	+= fingerprint/
 
+# Vibrator
+obj-y				+= vibrator/
+
 #TZIC
 obj-$(CONFIG_TZIC)	+= security/samsung/tzic/
 

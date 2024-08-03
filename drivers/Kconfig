@@ -239,6 +239,8 @@ source "drivers/sensorhub/brcm/Kconfig"
 
 source "drivers/optics/Kconfig"
 
+source "drivers/vibrator/Kconfig"
+
 source "drivers/fingerprint/Kconfig"
 
 source "drivers/sensors/Kconfig"
