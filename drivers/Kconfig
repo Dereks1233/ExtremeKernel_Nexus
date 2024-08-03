@@ -233,8 +233,6 @@ source "drivers/vision/Kconfig"
 
 source "drivers/samsung/Kconfig"
 
-source "drivers/motor/Kconfig"
-
 source "drivers/sensorhub/brcm/Kconfig"
 
 source "drivers/optics/Kconfig"

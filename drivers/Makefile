@@ -207,9 +207,6 @@ obj-$(CONFIG_VISION_SUPPORT)	+= vision/
 
 obj-$(CONFIG_GNSS)		+= gnss/
 
-# motor
-obj-y				+= motor/
-
 # Sensorhub driver
 obj-$(CONFIG_SENSORS_SSP)	+= sensorhub/
 
