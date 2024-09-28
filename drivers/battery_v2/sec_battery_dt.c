@@ -719,6 +719,8 @@ int sec_bat_parse_dt(struct device *dev,
 
                 battery->wpc_vout_ctrl_lcd_on = of_property_read_bool(np,
 						     "battery,wpc_vout_ctrl_lcd_on");
+		battery->support_unknown_wpcthm = of_property_read_bool(np,
+						     "battery,support_unknown_wpcthm");
 	}
 
 	ret = of_property_read_u32(np, "battery,wc_full_input_limit_current",
@@ -1847,13 +1849,6 @@ void sec_bat_parse_mode_dt(struct sec_battery_info *battery)
 	}
 
 	if (battery->store_mode) {
-		ret = of_property_read_u32(np, "battery,store_mode_max_input_power",
-			&pdata->store_mode_max_input_power);
-		if (ret) {
-			pr_info("%s : store_mode_max_input_power is Empty\n", __func__);
-			pdata->store_mode_max_input_power = 4000;
-		}
-
 		ret = of_property_read_u32(np, "battery,store_mode_afc_input_current",
 			&pdata->store_mode_afc_input_current);
 		if (ret) {

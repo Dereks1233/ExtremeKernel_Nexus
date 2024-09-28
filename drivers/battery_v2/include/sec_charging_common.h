@@ -461,12 +461,6 @@ enum sec_battery_wpc_en_ctrl {
 	WPC_EN_FW = 0x20,
 };
 
-enum sec_battery_direct_charging_source_ctrl {
-	SEC_TEST_MODE = 0x1,
-	SEC_SEND_UVDM = 0x2,
-	SEC_STORE_MODE = 0x4,
-};
-
 /* tx_event */
 #define BATT_TX_EVENT_WIRELESS_TX_STATUS		0x00000001
 #define BATT_TX_EVENT_WIRELESS_RX_CONNECT		0x00000002
@@ -501,6 +495,7 @@ enum sec_battery_direct_charging_source_ctrl {
 #define SEC_BAT_TX_RETRY_MIX_TEMP		0x0008
 #define SEC_BAT_TX_RETRY_HIGH_TEMP		0x0010
 #define SEC_BAT_TX_RETRY_LOW_TEMP		0x0020
+#define SEC_BAT_TX_RETRY_OCP			0x0040
 
 /* ext_event */
 #define BATT_EXT_EVENT_NONE			0x00000000
@@ -732,28 +727,30 @@ enum sec_battery_temp_check {
 /* SEC_FUELGAUGE_CAPACITY_TYPE_RAW
   * use capacity information from fuel gauge directly
   */
-#define SEC_FUELGAUGE_CAPACITY_TYPE_RAW		1
+#define SEC_FUELGAUGE_CAPACITY_TYPE_RAW		0x1
 /* SEC_FUELGAUGE_CAPACITY_TYPE_SCALE
   * rescale capacity by scaling, need min and max value for scaling
   */
-#define SEC_FUELGAUGE_CAPACITY_TYPE_SCALE	2
+#define SEC_FUELGAUGE_CAPACITY_TYPE_SCALE	0x2
 /* SEC_FUELGAUGE_CAPACITY_TYPE_DYNAMIC_SCALE
   * change only maximum capacity dynamically
   * to keep time for every SOC unit
   */
-#define SEC_FUELGAUGE_CAPACITY_TYPE_DYNAMIC_SCALE	4
+#define SEC_FUELGAUGE_CAPACITY_TYPE_DYNAMIC_SCALE	0x4
 /* SEC_FUELGAUGE_CAPACITY_TYPE_ATOMIC
   * change capacity value by only -1 or +1
   * no sudden change of capacity
   */
-#define SEC_FUELGAUGE_CAPACITY_TYPE_ATOMIC	8
+#define SEC_FUELGAUGE_CAPACITY_TYPE_ATOMIC	0x8
 /* SEC_FUELGAUGE_CAPACITY_TYPE_SKIP_ABNORMAL
   * skip current capacity value
   * if it is abnormal value
   */
-#define SEC_FUELGAUGE_CAPACITY_TYPE_SKIP_ABNORMAL	16
+#define SEC_FUELGAUGE_CAPACITY_TYPE_SKIP_ABNORMAL	0x10
 
-#define SEC_FUELGAUGE_CAPACITY_TYPE_CAPACITY_POINT	32
+#define SEC_FUELGAUGE_CAPACITY_TYPE_CAPACITY_POINT	0x20
+
+#define SEC_FUELGAUGE_CAPACITY_TYPE_LOST_SOC	0x40
 
 /* charger function settings (can be used overlapped) */
 #define sec_charger_functions_t unsigned int
@@ -870,7 +867,6 @@ struct sec_battery_platform_data {
 	unsigned int pre_wc_afc_input_current;
 	unsigned int store_mode_afc_input_current;
 	unsigned int store_mode_hv_wireless_input_current;
-	unsigned int store_mode_max_input_power;
 	unsigned int prepare_ta_delay;
 
 	char *pmic_name;
