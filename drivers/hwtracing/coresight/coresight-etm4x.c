@@ -84,6 +84,7 @@ static bool etm4_arch_supported(u8 arch)
 	/* Mask out the minor version number */
 	switch (arch & 0xf0) {
 	case ETM_ARCH_V4:
+	case ETM_ARCH_V4_2:
 		break;
 	default:
 		return false;
@@ -750,7 +751,6 @@ static void etm4_init_arch_data(void *info)
 	drvdata->nrseqstate = BMVAL(etmidr5, 25, 27);
 	/* NUMCNTR, bits[30:28] number of counters available for tracing */
 	drvdata->nr_cntr = BMVAL(etmidr5, 28, 30);
-	CS_LOCK(drvdata->base);
 }
 
 static void etm4_set_default_config(struct etmv4_config *config)
@@ -1519,10 +1519,13 @@ err_arch_supported:
 
 static const struct amba_id etm4_ids[] = {
 	ETM4x_AMBA_ID(0x000bb95d),		/* Cortex-A53 */
+	ETM4x_AMBA_ID(0x000bbd05),		/* Cortex-A55 */
 	ETM4x_AMBA_ID(0x000bb95e),		/* Cortex-A57 */
 	ETM4x_AMBA_ID(0x000bb95a),		/* Cortex-A72 */
 	ETM4x_AMBA_ID(0x000bb959),		/* Cortex-A73 */
+	ETM4x_AMBA_ID(0x000bbd0a),		/* Cortex-A75 */
 	ETM4x_AMBA_ID(0x000bb9da),		/* Cortex-A35 */
+	ETM4x_AMBA_ID(0x000ce003),		/* Exynos-M4  */
 	{},
 };
 

@@ -346,13 +346,9 @@ static int dynamic_funnel_probe(struct amba_device *adev,
 
 static const struct amba_id dynamic_funnel_ids[] = {
 	{
-		.id     = 0x0003b908,
-		.mask   = 0x0003ffff,
-	},
-	{
-		/* Coresight SoC-600 */
-		.id     = 0x000bb9eb,
+		.id     = 0x000bb908,
 		.mask   = 0x000fffff,
+		.data	= "FUNNEL",
 	},
 	{ 0, 0},
 };

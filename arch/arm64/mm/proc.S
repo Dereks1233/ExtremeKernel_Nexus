@@ -188,6 +188,9 @@ ENDPROC(cpu_do_switch_mm)
 	msr	ttbr1_el1, \tmp1
 	isb
 	tlbi	vmalle1
+#ifdef CONFIG_SOC_EXYNOS9820
+	tlbi    vaale1is, xzr                   // dummy TLBI
+#endif
 	dsb	nsh
 	isb
 .endm
@@ -198,7 +201,11 @@ ENDPROC(cpu_do_switch_mm)
  * This is the low-level counterpart to cpu_replace_ttbr1, and should not be
  * called by anything else. It can only be executed from a TTBR0 mapping.
  */
+#ifdef CONFIG_RKP_CFP_JOPP
+NOP_ENTRY(idmap_cpu_replace_ttbr1)
+#else
 ENTRY(idmap_cpu_replace_ttbr1)
+#endif
 	mrs	x2, daif
 	msr	daifset, #0xf
 
@@ -226,7 +233,13 @@ ENDPROC(idmap_cpu_replace_ttbr1)
 
 	.macro __idmap_kpti_put_pgtable_ent_ng, type
 	orr	\type, \type, #PTE_NG		// Same bit for blocks and pages
+#ifdef CONFIG_RKP
+	mov	x2, \type
+	mov	x1, cur_\()\type\()p	
+	str	x2, [x1]	// Update the entry and ensure it
+#else
 	str	\type, [cur_\()\type\()p]	// Update the entry and ensure
+#endif
 	dmb	sy				// that it is visible to all
 	dc	civac, cur_\()\type\()p		// CPUs.
 	.endm
@@ -238,7 +251,12 @@ ENDPROC(idmap_cpu_replace_ttbr1)
  */
 __idmap_kpti_flag:
 	.long	1
+
+#ifdef CONFIG_RKP_CFP_JOPP
+NOP_ENTRY(idmap_kpti_install_ng_mappings)
+#else
 ENTRY(idmap_kpti_install_ng_mappings)
+#endif
 	cpu		.req	w0
 	num_cpus	.req	w1
 	swapper_pa	.req	x2
@@ -420,6 +438,9 @@ ENDPROC(idmap_kpti_install_ng_mappings)
 	.pushsection ".idmap.text", "awx"
 ENTRY(__cpu_setup)
 	tlbi	vmalle1				// Invalidate local TLB
+#ifdef CONFIG_SOC_EXYNOS9820
+	tlbi    vaale1is, xzr                   // dummy TLBI
+#endif
 	dsb	nsh
 
 	mov	x0, #3 << 20

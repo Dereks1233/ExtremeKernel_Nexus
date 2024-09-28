@@ -90,7 +90,11 @@ _head:
 	le64sym	_kernel_size_le			// Effective size of kernel image, little-endian
 	le64sym	_kernel_flags_le		// Informative flags, little-endian
 	.quad	0				// reserved
-	.quad	0				// reserved
+#ifdef CONFIG_PROCA
+	le64sym	_proca_conf_offset		// memory info for proca ta
+#else
+	.quad	0xecefecef			// Magic number for proca ta
+#endif
 	.quad	0				// reserved
 	.ascii	"ARM\x64"			// Magic number
 #ifdef CONFIG_EFI
@@ -675,7 +679,10 @@ ENTRY(__enable_mmu)
 	 * been dynamically patched at the PoU.
 	 */
 	ic	iallu
-	dsb	nsh
+#ifdef CONFIG_SOC_EXYNOS9820
+	tlbi    vaale1is, xzr                   // dummy TLBI
+#endif
+	dsb	ish
 	isb
 	ret
 ENDPROC(__enable_mmu)
@@ -848,12 +855,18 @@ __primary_switch:
 	bl	__create_page_tables		// recreate kernel mapping
 
 	tlbi	vmalle1				// Remove any stale TLB entries
+#ifdef CONFIG_SOC_EXYNOS9820
+	tlbi    vaale1is, xzr                   // dummy TLBI
+#endif
 	dsb	nsh
 
 	msr	sctlr_el1, x19			// re-enable the MMU
 	isb
 	ic	iallu				// flush instructions fetched
-	dsb	nsh				// via old mapping
+#ifdef CONFIG_SOC_EXYNOS9820
+	tlbi    vaale1is, xzr                   // dummy TLBI
+#endif
+	dsb	ish				// via old mapping
 	isb
 
 	bl	__relocate_kernel
