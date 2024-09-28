@@ -23,7 +23,7 @@
 #include "nfc_logger.h"
 
 #define BUF_SIZE	SZ_256K
-#define MAX_STR_LEN	160
+#define MAX_STR_LEN	128
 #define PROC_FILE_NAME	"nfclog"
 #define LOG_PREFIX	"sec-nfc"
 
@@ -43,7 +43,7 @@ void nfc_logger_print(const char *fmt, ...)
 {
 	int len;
 	va_list args;
-	char buf[MAX_STR_LEN] = {0, };
+	char buf[MAX_STR_LEN + 16];
 	u64 time;
 	unsigned long nsec;
 	volatile unsigned int curpos;
@@ -61,15 +61,12 @@ void nfc_logger_print(const char *fmt, ...)
 	len = snprintf(buf, sizeof(buf), "[%5lu.%06ld] ", (unsigned long)time, nsec / 1000);
 
 	va_start(args, fmt);
-	len += vsnprintf(buf + len, MAX_STR_LEN - len, fmt, args);
+	len += vsnprintf(buf + len, MAX_STR_LEN, fmt, args);
 	va_end(args);
 
-	if (len > MAX_STR_LEN)
-		len = MAX_STR_LEN;
-
-	curpos = g_curpos;
-	if (curpos + len >= BUF_SIZE) {
-		g_curpos = curpos = 0;
+	curpos = g_curpos; 
+	if (curpos + len >= BUF_SIZE) { 
+		g_curpos = curpos = 0; 
 		is_buf_full = 1;
 	}
 	memcpy(log_buf + curpos, buf, len);
@@ -79,7 +76,7 @@ void nfc_logger_print(const char *fmt, ...)
 void nfc_print_hex_dump(void *buf, void *pref, size_t size)
 {
 	uint8_t *ptr = buf;
-	uint32_t i;
+	size_t i;
 	char tmp[128] = {0x0, };
 	char *ptmp = tmp;
 	int len;
