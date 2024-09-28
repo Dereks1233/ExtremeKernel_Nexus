@@ -12,7 +12,7 @@
 #include "abox_msg.h"
 
 #define TIMEOUT_NS 1000000
-#define FLUSH_TIMEOUT_NS (TIMEOUT_NS * 200)
+#define FLUSH_TIMEOUT_NS (TIMEOUT_NS * 20)
 #define min(a, b) (a < b ? a : b)
 
 static struct abox_msg_queue *tx;
