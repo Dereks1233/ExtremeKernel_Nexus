@@ -20,6 +20,17 @@
 #include "input-event-codes.h"
 
 #ifdef CONFIG_INPUT_TOUCHSCREEN
+
+/*
+ * sys/class/sec/tsp/support_feature
+ * bit value should be made a promise with InputFramework.
+ */
+#define INPUT_FEATURE_ENABLE_SETTINGS_AOT	(1 << 0) /* Double tap wakeup settings */
+#define INPUT_FEATURE_ENABLE_PRESSURE		(1 << 1) /* homekey pressure */
+#define INPUT_FEATURE_ENABLE_SYNC_RR120		(1 << 2) /* sync reportrate 120hz */
+#define INPUT_FEATURE_SUPPORT_OPEN_SHORT_TEST		(1 << 8) /* open/short test support */
+#define INPUT_FEATURE_SUPPORT_MIS_CALIBRATION_TEST	(1 << 9) /* mis-calibration test support */
+
 /*
  * sec Log
  */
@@ -113,7 +124,7 @@
 })
 #define input_raw_data_clear() sec_tsp_raw_data_clear()
 #endif
-#define input_log_fix()	sec_tsp_log_fix()
+#define input_log_fix()	{}
 #else
 #define input_dbg(mode, dev, fmt, ...)						\
 ({										\

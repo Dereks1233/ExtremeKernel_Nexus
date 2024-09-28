@@ -340,6 +340,9 @@
 #define KEY_RECENT   		254
 /* Code 255 is reserved for special needs of AT keyboard driver */
 
+#define KEY_INT_CANCEL		0x2be	/* for touch event skip */
+#define KEY_WINK			0x2bf    /* Intelligence Key */
+
 #define BTN_MISC		0x100
 #define BTN_0			0x100
 #define BTN_1			0x101
