@@ -133,15 +133,14 @@ struct adaptive_info {
 
 struct df_status_info {
 	bool enabled;
+
 	u32 request_df;
 	u32 target_df;
 	u32 current_df;
 	u32 ffc_df;
 	u32 context;
-
-	u32 current_ddi_osc;
-	u32 request_ddi_osc;
 };
+
 
 struct df_setting_info {
 	unsigned int hs;

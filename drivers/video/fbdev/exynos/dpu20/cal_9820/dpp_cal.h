@@ -40,7 +40,6 @@ struct dpp_params_info {
 #ifdef CONFIG_EXYNOS_MCD_HDR
 	u32 wcg_mode;
 #endif
-
 };
 
 struct dpp_size_constraints {

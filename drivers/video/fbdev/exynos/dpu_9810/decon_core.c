@@ -1487,9 +1487,10 @@ static int decon_set_hdr_info(struct decon_device *decon,
 	video_meta = (struct exynos_video_meta *)dma_buf_vmap(
 			regs->dma_buf_data[win_num][meta_plane].dma_buf);
 	if (IS_ERR_OR_NULL(video_meta)) {
-		decon_err("Failed to get virtual address (err %pK)\n", video_meta);
+		decon_err("Failed to get virtual address (err %p)\n", video_meta);
 		return -ENOMEM;
 	}
+
 	hdr_cmp = memcmp(&decon->prev_hdr_info,
 			&video_meta->data.dec.shdr_static_info,
 			sizeof(struct exynos_hdr_static_info));
@@ -2629,10 +2630,6 @@ static int decon_fb_test_alloc_memory(struct decon_device *decon, u32 size)
 	}
 
 	vaddr = ion_map_kernel(decon->ion_client, handle);
-	if (IS_ERR_OR_NULL(vaddr)) {
-		dev_err(decon->dev, "ion_map_kernel() failed\n");
-		goto err_map;
-	}
 
 	memset(vaddr, 0x00, size);
 
