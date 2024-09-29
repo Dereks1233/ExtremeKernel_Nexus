@@ -162,6 +162,7 @@ struct max77705_muic_data {
 	int				hv_voltage;
 	int				afc_retry;
 	int				dcdtmo_retry;
+	int				bc1p2_retry_count;
 
  	/* hiccup mode flag */
  	int				is_hiccup_mode;

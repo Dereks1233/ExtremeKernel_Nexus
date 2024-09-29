@@ -1566,10 +1566,6 @@ static u8 max77705_resolve_chgtyp(struct max77705_muic_data *muic_data, u8 chgty
 		u8 spchgtyp, u8 dcdtmo, int irq)
 {
 	u8 ret = chgtyp;
-	u8 ccistat = 0;
-
-	max77705_read_reg(muic_data->i2c, REG_CC_STATUS0, &ccistat);
-	ccistat = (ccistat & BIT_CCIStat) >> FFS(BIT_CCIStat);
 
 #if defined(CONFIG_HICCUP_CHARGER)
 	/* Check hiccup mode */
@@ -1591,21 +1587,10 @@ static u8 max77705_resolve_chgtyp(struct max77705_muic_data *muic_data, u8 chgty
 	/* Check DCD timeout */
 	if (dcdtmo && chgtyp == CHGTYP_USB &&
 			(irq == muic_data->irq_chgtyp || irq == MUIC_IRQ_INIT_DETECT)) {
-		if (irq == MUIC_IRQ_INIT_DETECT) {
+		if (irq == MUIC_IRQ_INIT_DETECT)
 			ret = CHGTYP_TIMEOUT_OPEN;
-
-			if (ccistat == CCI_500mA) {
-				ret = CHGTYP_NO_VOLTAGE;
-				muic_data->dcdtmo_retry++;
-				pr_info("%s:%s DCD_TIMEOUT retry count: %d\n",
-						MUIC_DEV_NAME, __func__,
-						muic_data->dcdtmo_retry);
-				max77705_muic_enable_chgdet(muic_data);
-			}
-		} else {
-			ret = (muic_data->dcdtmo_retry >= 2) ? CHGTYP_TIMEOUT_OPEN : CHGTYP_NO_VOLTAGE;
-		}
-		goto out;
+		else
+			ret = (muic_data->dcdtmo_retry >= muic_data->bc1p2_retry_count) ? CHGTYP_TIMEOUT_OPEN : CHGTYP_NO_VOLTAGE;
 	}
 
 	/* Check Special chgtyp */
@@ -2227,6 +2212,22 @@ static void max77705_muic_init_detect(struct max77705_muic_data *muic_data)
 	mutex_unlock(&muic_data->muic_mutex);
 }
 
+static void max77705_set_bc1p2_retry_count(struct max77705_muic_data *muic_data)
+{
+	struct device_node *np = NULL;
+	int count;
+
+	np = of_find_compatible_node(NULL, NULL, "maxim,max77705");
+
+	if (np && !of_property_read_u32(np, "max77705,bc1p2_retry_count", &count))
+		muic_data->bc1p2_retry_count = count;
+	else
+		muic_data->bc1p2_retry_count = 1; /* default retry count */
+
+	pr_info("%s:%s BC1p2 Retry count: %d\n", MUIC_DEV_NAME,
+				__func__, muic_data->bc1p2_retry_count);
+}
+
 #if IS_ENABLED(CONFIG_MUIC_UART_SWITCH)
 int max77705_muic_set_gpio_uart_sel(int uart_sel)
 {
@@ -2542,6 +2543,9 @@ int max77705_muic_probe(struct max77705_usbc_platform_data *usbc_data)
 
 	/* initial cable detection */
 	max77705_muic_init_detect(muic_data);
+
+	/* set bc1p2 retry count */
+	max77705_set_bc1p2_retry_count(muic_data);
 
 	/* register usb external notifier */
 	muic_register_usb_notifier(muic_data);

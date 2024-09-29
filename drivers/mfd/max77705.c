@@ -36,10 +36,11 @@
 #include <linux/muic/muic.h>
 #include <linux/muic/max77705-muic.h>
 #include <linux/ccic/max77705_usbc.h>
+//#include <linux/ccic/max77705_pass2.h>
+#include <linux/ccic/max77705_pass3.h>
+#include <linux/ccic/max77705_pass4.h>
 #if defined(CONFIG_MAX77705_FW_PID03_SUPPORT)
 #include <linux/ccic/max77705C_pass2_PID03.h>
-#elif defined(CONFIG_MAX77705_FW_PID07_SUPPORT)
-#include <linux/ccic/max77705C_pass2_PID07.h>
 #else
 #include <linux/ccic/max77705C_pass2.h>
 #endif
@@ -216,35 +217,6 @@ int max77705_write_reg(struct i2c_client *i2c, u8 reg, u8 value)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(max77705_write_reg);
-
-int max77705_write_reg_nolock(struct i2c_client *i2c, u8 reg, u8 value)
-{
-	struct otg_notify *o_notify = get_otg_notify();
-	int ret = -EIO;
-	int timeout = 2000; /* 2sec */
-	int interval = 100;
-
-	while (ret == -EIO) {
-		ret = i2c_smbus_write_byte_data(i2c, reg, value);
-
-		if (ret < 0) {
-			pr_info("%s:%s reg(0x%x), ret(%d), timeout %d\n",
-					MFD_DEV_NAME, __func__, reg, ret, timeout);
-
-			if (timeout < 0)
-				break;
-
-			msleep(interval);
-			timeout -= interval;
-		}
-	}
-#if defined(CONFIG_USB_HW_PARAM)
-	if (o_notify && ret < 0)
-		inc_hw_param(o_notify, USB_CCIC_I2C_ERROR_COUNT);
-#endif
-	return ret;
-}
-EXPORT_SYMBOL_GPL(max77705_write_reg_nolock);
 
 int max77705_bulk_write(struct i2c_client *i2c, u8 reg, int count, u8 *buf)
 {
@@ -653,37 +625,36 @@ int max77705_usbc_fw_update(struct max77705_dev *max77705,
 		const u8 *fw_bin, int fw_bin_len, int enforce_do)
 {
 	max77705_fw_header *fw_header;
-#if defined(CONFIG_USB_HW_PARAM)
 	struct otg_notify *o_notify = get_otg_notify();
-#endif
 	int offset = 0;
 	unsigned long duration = 0;
 	int size = 0;
 	int try_count = 0;
 	int ret = 0;
-	u8 usbc_status1 = 0x0;
 	u8 pd_status1 = 0x0;
 	static u8 fct_id; /* FCT cable */
-	u8 uidadc; /* FCT cable */
 	u8 try_command = 0;
 	u8 sw_boot = 0;
 	u8 chg_cnfg_00 = 0;
 	bool chg_mode_changed = 0;
 	bool wpc_en_changed = 0;
 	int vcell = 0;
-	u8 chgin_dtls = 0;
+	u8 vbvolt = 0;
 	u8 wcin_dtls = 0;
+	u8 chg_curr = 0;
+	u8 vchgin = 0;
 	int error = 0;
 
+
 	fw_header = (max77705_fw_header *)fw_bin;
-	pr_info("FW: magic/%x/ major/%x/ minor/%x/ product_id/%x/ rev/%x/ id/%x/",
+	msg_maxim("FW: magic/%x/ major/%x/ minor/%x/ product_id/%x/ rev/%x/ id/%x/",
 		  fw_header->magic, fw_header->major, fw_header->minor, fw_header->product_id, fw_header->rev, fw_header->id);
 	if(max77705->device_product_id != fw_header->product_id) {
-		pr_info("product indicator mismatch");
+		msg_maxim("product indicator mismatch");
 		return 0;
 	}
 	if(fw_header->magic == MAX77705_SIGN)
-		pr_info("FW: matched");
+		msg_maxim("FW: matched");
 
 	max77705_read_reg(max77705->charger, MAX77705_CHG_REG_CNFG_00, &chg_cnfg_00);
 retry:
@@ -702,7 +673,7 @@ retry:
 	ret = max77705_read_reg(max77705->muic, REG_UIC_FW_REV, &max77705->FW_Revision);
 	ret = max77705_read_reg(max77705->muic, REG_UIC_FW_MINOR, &max77705->FW_Minor_Revision);
 	if (ret < 0 && (try_count == 0 && try_command == 0)) {
-		pr_info("Failed to read FW_REV");
+		msg_maxim("Failed to read FW_REV");
 		error = -EIO;
 		goto out;
 	}
@@ -711,7 +682,7 @@ retry:
 
 	max77705->FW_Product_ID = max77705->FW_Minor_Revision >> FW_PRODUCT_ID_REG;
 	max77705->FW_Minor_Revision &= MINOR_VERSION_MASK;
-	pr_info("chip : %02X.%02X(PID 0x%x), FW : %02X.%02X(PID 0x%x)",
+	msg_maxim("chip : %02X.%02X(PID 0x%x), FW : %02X.%02X(PID 0x%x)",
 			max77705->FW_Revision, max77705->FW_Minor_Revision, max77705->FW_Product_ID,
 			fw_header->major, fw_header->minor, fw_header->product_id);
 	store_ccic_bin_version(&fw_header->major, &sw_boot);
@@ -727,12 +698,7 @@ retry:
 		if (!enforce_do && max77705->pmic_rev > MAX77705_PASS1) { /* on Booting time */
 			max77705_read_reg(max77705->muic, REG_PD_STATUS1, &pd_status1);
 			fct_id = (pd_status1 & BIT_FCT_ID) >> FFS(BIT_FCT_ID);
-
-			max77705_read_reg(max77705->muic, REG_USBC_STATUS1, &usbc_status1);
-			uidadc = (usbc_status1 & BIT_UIDADC) >> FFS(BIT_UIDADC);
-#ifdef DEBUG_MAX77705
-			msg_maxim("FCT_ID : 0x%x UIDADC : 0x%x", fct_id, uidadc);
-#endif
+			msg_maxim("FCT_ID : 0x%x", fct_id);
 		}
 
 		if (try_count == 0 && try_command == 0) {
@@ -753,14 +719,12 @@ retry:
 		wpc_en_changed = true;
 		max77705_wc_control(max77705, false);
 
-		max77705_read_reg(max77705->charger, MAX77705_CHG_REG_DETAILS_00, &chgin_dtls);
+		max77705_read_reg(max77705->muic, MAX77705_USBC_REG_BC_STATUS, &vbvolt);
 
-		chgin_dtls = ((chgin_dtls & 0x60) >> 5);
+		pr_info("%s: BC:0x%02x, vbvolt:0x%x, wcin_dtls:0x%x\n",
+			__func__, vbvolt, ((vbvolt & 0x80) >> 7), wcin_dtls);
 
-		pr_info("%s: chgin_dtls:0x%x, wcin_dtls:0x%x\n",
-			__func__, chgin_dtls, wcin_dtls);
-
-		if ((chgin_dtls != 0x3) && (wcin_dtls != 0x3)) {
+		if (!(vbvolt & 0x80) && (wcin_dtls != 0x3)) {
 			chg_mode_changed = true;
 					/* Switching Frequency : 3MHz */
 			max77705_update_reg(max77705->charger,
@@ -777,6 +741,16 @@ retry:
 			pr_info("%s: +change chg_mode(0x9), vcell(%dmv)\n",
 						__func__, vcell);
 		} else {
+			max77705_update_reg(max77705->charger,
+				MAX77705_CHG_REG_CNFG_12, 0x18, 0x18);
+			max77705_read_reg(max77705->charger, MAX77705_CHG_REG_CNFG_12, &vchgin);
+			pr_info("%s: -set aicl, (0x%02x)\n", __func__, vchgin);
+
+			max77705_update_reg(max77705->charger,
+				MAX77705_CHG_REG_CNFG_02, 0x0, 0x3F);
+			max77705_read_reg(max77705->charger, MAX77705_CHG_REG_CNFG_02, &chg_curr);
+			pr_info("%s: -set charge curr 100mA, (0x%02x)\n", __func__, chg_curr);
+
 			if (chg_mode_changed) {
 				chg_mode_changed = false;
 				/* Auto skip mode */
@@ -817,17 +791,23 @@ retry:
 		max77705_read_reg(max77705->muic, REG_UIC_FW_REV, &max77705->FW_Revision);
 		max77705_read_reg(max77705->muic, REG_UIC_FW_MINOR, &max77705->FW_Minor_Revision);
 		max77705->FW_Minor_Revision &= MINOR_VERSION_MASK;
-		pr_info("Start FW updating (%02X.%02X)", max77705->FW_Revision, max77705->FW_Minor_Revision);
+		msg_maxim("Start FW updating (%02X.%02X)", max77705->FW_Revision, max77705->FW_Minor_Revision);
+		if (max77705->FW_Revision != 0xFF && try_command < 3) {
+			try_command++;
+			max77705_reset_ic(max77705);
+			msleep(1000);
+			goto retry;
+		}
 
 		if (max77705->FW_Revision != 0xFF) {
-			if (++try_command < FW_SECURE_MODE_TRY_COUNT) {
-				pr_info("the Fail to enter secure mode %d",
-						try_command);
+			if (++try_count < FW_VERIFY_TRY_COUNT) {
+				msg_maxim("the Fail to enter secure mode %d",
+						try_count);
 				max77705_reset_ic(max77705);
 				msleep(1000);
 				goto retry;
 			} else {
-				pr_info("the Secure Update Fail!!");
+				msg_maxim("the Secure Update Fail!!");
 #if defined(CONFIG_USB_HW_PARAM)
 				if (o_notify)
 					inc_hw_param(o_notify, USB_CCIC_FWUP_ERROR_COUNT);
@@ -836,8 +816,6 @@ retry:
 				goto out;
 			}
 		}
-
-		try_command = 0;
 
 		for (offset = FW_HEADER_SIZE;
 				offset < fw_bin_len && size != FW_UPDATE_END;) {
@@ -853,13 +831,13 @@ retry:
 				 * Retry FW updating
 				 */
 				if (++try_count < FW_VERIFY_TRY_COUNT) {
-					pr_info("Retry fw write. ret %d, count %d, offset %d",
+					msg_maxim("Retry fw write. ret %d, count %d, offset %d",
 							size, try_count, offset);
 					max77705_reset_ic(max77705);
 					msleep(1000);
 					goto retry;
 				} else {
-					pr_info("Failed to update FW. ret %d, offset %d",
+					msg_maxim("Failed to update FW. ret %d, offset %d",
 							size, (offset + size));
 #if defined(CONFIG_USB_HW_PARAM)
 					if (o_notify)
@@ -871,7 +849,7 @@ retry:
 				break;
 			case FW_UPDATE_CMD_FAIL:
 			case FW_UPDATE_MAX_LENGTH_FAIL:
-				pr_info("Failed to update FW. ret %d, offset %d",
+				msg_maxim("Failed to update FW. ret %d, offset %d",
 						size, (offset + size));
 #if defined(CONFIG_USB_HW_PARAM)
 				if (o_notify)
@@ -888,10 +866,10 @@ retry:
 				max77705_read_reg(max77705->muic,
 						REG_UIC_FW_MINOR, &max77705->FW_Minor_Revision);
 				max77705->FW_Minor_Revision &= MINOR_VERSION_MASK;
-				pr_info("chip : %02X.%02X, FW : %02X.%02X",
+				msg_maxim("chip : %02X.%02X, FW : %02X.%02X",
 						max77705->FW_Revision, max77705->FW_Minor_Revision,
 						fw_header->major, fw_header->minor);
-				pr_info("Completed");
+				msg_maxim("Completed");
 				break;
 			default:
 				offset += size;
@@ -904,19 +882,19 @@ retry:
 				max77705_read_reg(max77705->muic,
 						REG_UIC_FW_MINOR, &max77705->FW_Minor_Revision);
 				max77705->FW_Minor_Revision &= MINOR_VERSION_MASK;
-				pr_info("chip : %02X.%02X, FW : %02X.%02X",
+				msg_maxim("chip : %02X.%02X, FW : %02X.%02X",
 						max77705->FW_Revision, max77705->FW_Minor_Revision,
 						fw_header->major, fw_header->minor);
-				pr_info("Completed via SYS path");
+				msg_maxim("Completed via SYS path");
 			}
 		}
 	} else {
-		pr_info("Don't need to update!");
+		msg_maxim("Don't need to update!");
 		goto out;
 	}
 
 	duration = jiffies - duration;
-	pr_info("Duration : %dms", jiffies_to_msecs(duration));
+	msg_maxim("Duration : %dms", jiffies_to_msecs(duration));
 out:
 	if (chg_mode_changed) {
 		vcell = max77705_fuelgauge_read_vcell(max77705);
@@ -960,10 +938,16 @@ void max77705_usbc_fw_setting(struct max77705_dev *max77705, int enforce_do)
 {
 	switch (max77705->pmic_rev) {
 	case MAX77705_PASS1:
+		pr_info("[MAX77705] Doesn't update the MAX77705_PASS1\n");
+		break;
 	case MAX77705_PASS2:
+		pr_info("[MAX77705] Doesn't update the MAX77705_PASS2\n");
+		break;
 	case MAX77705_PASS3:
+		max77705_usbc_fw_update(max77705, BOOT_FLASH_FW_PASS3,  ARRAY_SIZE(BOOT_FLASH_FW_PASS3), enforce_do);
+		break;
 	case MAX77705_PASS4:
-		pr_info("[MAX77705] Couldn't update the MAX77705 FirmWare\n");
+		max77705_usbc_fw_update(max77705, BOOT_FLASH_FW_PASS4,  ARRAY_SIZE(BOOT_FLASH_FW_PASS4), enforce_do);
 		break;
 	case MAX77705_PASS5:
 		max77705_usbc_fw_update(max77705, BOOT_FLASH_FW_PASS2,  ARRAY_SIZE(BOOT_FLASH_FW_PASS2), enforce_do);
@@ -986,6 +970,19 @@ static u8 max77705_revision_check(u8 pmic_id, u8 pmic_rev) {
 	}
 	return logical_id;
 }
+
+void max77705_register_pdmsg_func(struct max77705_dev *max77705,
+	void (*check_pdmsg)(void *data, u8 pdmsg), void *data)
+{
+	if (!max77705) {
+		pr_err("%s max77705 is null\n", __func__);
+		return;
+	}
+
+	max77705->check_pdmsg = check_pdmsg;
+	max77705->usbc_data = data;
+}
+EXPORT_SYMBOL_GPL(max77705_register_pdmsg_func);
 
 static int max77705_i2c_probe(struct i2c_client *i2c,
 				const struct i2c_device_id *dev_id)
