@@ -24,12 +24,6 @@
 #include "../fimc-is-device-ischain.h"
 #include "fimc-is-vender.h"
 
-#ifdef CONFIG_RKP
-#include <linux/rkp.h>
-#endif
-
-extern int debug_rta;
-
 struct fimc_is_lib_support gPtr_lib_support;
 struct mutex gPtr_bin_load_ctrl;
 extern struct fimc_is_lib_vra *g_lib_vra;
@@ -1976,11 +1970,6 @@ void fimc_is_get_binary_version(char **buf, unsigned int type, unsigned int hint
 	}
 }
 
-static int is_debug_level_rta(void)
-{
-	return debug_rta;
-}
-
 void set_os_system_funcs(os_system_func_t *funcs)
 {
 	funcs[0] = (os_system_func_t)fimc_is_log_write_console;
@@ -2116,7 +2105,6 @@ void set_os_system_funcs_for_rta(os_system_func_t *funcs)
 	/* Index 90 => misc */
 	funcs[90] = (os_system_func_t)fimc_is_get_usec;
 	funcs[91] = (os_system_func_t)fimc_is_get_binary_version;
-	funcs[92] = (os_system_func_t)is_debug_level_rta;
 }
 #endif
 
@@ -2244,10 +2232,6 @@ int fimc_is_load_ddk_bin(int loadType)
 	struct device *device = &gPtr_lib_support.pdev->dev;
 	/* fixup the memory attribute for every region */
 	ulong lib_addr;
-#ifdef CONFIG_RKP
-	rkp_dynamic_load_t rkp_dyn;
-	static rkp_dynamic_load_t rkp_dyn_before = {0};
-#endif
 	ulong lib_isp = DDK_LIB_ADDR;
 
 #ifdef USE_ONE_BINARY
@@ -2285,23 +2269,6 @@ int fimc_is_load_ddk_bin(int loadType)
 	}
 
 	if (loadType == BINARY_LOAD_ALL) {
-#ifdef CONFIG_RKP
-		memset(&rkp_dyn, 0, sizeof(rkp_dyn));
-		rkp_dyn.binary_base = lib_addr;
-		rkp_dyn.binary_size = bin.size;
-		rkp_dyn.code_base1 = memory_attribute[INDEX_ISP_BIN].vaddr;
-		rkp_dyn.code_size1 = memory_attribute[INDEX_ISP_BIN].numpages * PAGE_SIZE;
-#ifdef USE_ONE_BINARY
-		rkp_dyn.type = RKP_DYN_FIMC_COMBINED;
-		rkp_dyn.code_base2 = memory_attribute[INDEX_VRA_BIN].vaddr;
-		rkp_dyn.code_size2 = memory_attribute[INDEX_VRA_BIN].numpages * PAGE_SIZE;
-#else
-		rkp_dyn.type = RKP_DYN_FIMC;
-#endif
-		if (rkp_dyn_before.type)
-			uh_call(UH_APP_RKP, RKP_DYNAMIC_LOAD, RKP_DYN_COMMAND_RM,(u64)&rkp_dyn_before, 0, 0);
-		memcpy(&rkp_dyn_before, &rkp_dyn, sizeof(rkp_dynamic_load_t));
-#endif
 		ret = fimc_is_memory_attribute_nxrw(&memory_attribute[INDEX_ISP_BIN]);
 		if (ret) {
 			err_lib("failed to change into NX memory attribute (%d)", ret);
@@ -2329,12 +2296,6 @@ int fimc_is_load_ddk_bin(int loadType)
 			goto fail;
 		}
 
-#ifdef CONFIG_RKP
-		ret = uh_call(UH_APP_RKP, RKP_DYNAMIC_LOAD, RKP_DYN_COMMAND_INS, (u64)&rkp_dyn, 0, 0);
-		if (ret) {
-			err_lib("fail to load verify FIMC in EL2");
-		}
-#else
 		ret = fimc_is_memory_attribute_rox(&memory_attribute[INDEX_ISP_BIN]);
 		if (ret) {
 			err_lib("failed to change into EX memory attribute (%d)", ret);
@@ -2347,7 +2308,6 @@ int fimc_is_load_ddk_bin(int loadType)
 			err_lib("failed to change into EX memory attribute (%d)", ret);
 			return ret;
 		}
-#endif
 #endif
 	} else { /* loadType == BINARY_LOAD_DATA */
 		if ((bin.size > CAMERA_BINARY_DDK_DATA_OFFSET) && (bin.size <= bin_size)) {
@@ -2471,11 +2431,6 @@ int fimc_is_load_rta_bin(int loadType)
 	os_system_func_t os_system_funcs[100];
 	ulong lib_rta = RTA_LIB_ADDR;
 
-#ifdef CONFIG_RKP
-	rkp_dynamic_load_t rkp_dyn;
-	static rkp_dynamic_load_t rkp_dyn_before = {0};
-#endif
-
 	struct fimc_is_memory_attribute rta_memory_attribute = {
 		__pgprot(PTE_RDONLY), PFN_UP(LIB_RTA_CODE_SIZE), lib_rta};
 
@@ -2495,17 +2450,6 @@ int fimc_is_load_rta_bin(int loadType)
 	}
 
 	if (loadType == BINARY_LOAD_ALL) {
-#ifdef CONFIG_RKP
-		memset(&rkp_dyn, 0, sizeof(rkp_dyn));
-		rkp_dyn.binary_base = lib_rta;
-		rkp_dyn.binary_size = bin.size;
-		rkp_dyn.code_base1 = rta_memory_attribute.vaddr;
-		rkp_dyn.code_size1 = rta_memory_attribute.numpages * PAGE_SIZE;
-		rkp_dyn.type = RKP_DYN_FIMC;
-		if (rkp_dyn_before.type)
-			uh_call(UH_APP_RKP, RKP_DYNAMIC_LOAD, RKP_DYN_COMMAND_RM, (u64)&rkp_dyn_before, 0, 0);
-		memcpy(&rkp_dyn_before, &rkp_dyn, sizeof(rkp_dynamic_load_t));
-#endif
 		ret = fimc_is_memory_attribute_nxrw(&rta_memory_attribute);
 		if (ret) {
 			err_lib("failed to change into NX memory attribute (%d)", ret);
@@ -2523,18 +2467,11 @@ int fimc_is_load_rta_bin(int loadType)
 			ret = -EBADF;
 			goto fail;
 		}
-#ifdef CONFIG_RKP
-		ret = uh_call(UH_APP_RKP, RKP_DYNAMIC_LOAD, RKP_DYN_COMMAND_INS,(u64)&rkp_dyn, 0, 0);
-		if (ret) {
-			err_lib("fail to load verify FIMC in EL2");
-		}
-#else
 		ret = fimc_is_memory_attribute_rox(&rta_memory_attribute);
 		if (ret) {
 			err_lib("failed to change into EX memory attribute (%d)", ret);
 			return ret;
 		}
-#endif
 
 	} else { /* loadType == BINARY_LOAD_DATA */
 		if ((bin.size > CAMERA_BINARY_RTA_DATA_OFFSET) && (bin.size <= RTA_LIB_SIZE)) {

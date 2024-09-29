@@ -739,9 +739,6 @@ static int fimc_is_ssx_video_s_ctrl(struct file *file, void *priv,
 		}
 		break;
 #endif
-	case V4L2_CID_SENSOR_SET_EXTENDEDMODE:
-		device->ex_mode = ctrl->value;
-		break;
 	default:
 		ret = fimc_is_sensor_s_ctrl(device, ctrl);
 		if (ret) {

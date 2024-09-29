@@ -352,7 +352,7 @@ int fimc_is_hw_paf_update_param(struct fimc_is_hw_ip *hw_ip, struct is_region *r
 	int ret = 0;
 	struct fimc_is_hw_paf *hw_paf;
 	u32 hw_format, bitwidth;
-	u32 width, height, pix_stride;
+	u32 width, height;
 #if defined(CONFIG_CAMERA_PAFSTAT)
 	u32 paf_ch;
 	void __iomem *paf_ctx_addr;
@@ -369,9 +369,8 @@ int fimc_is_hw_paf_update_param(struct fimc_is_hw_ip *hw_ip, struct is_region *r
 
 	hw_format = param->dma_input.format;
 	bitwidth = param->dma_input.bitwidth;
-	width = param->dma_input.dma_crop_width;
-	height = param->dma_input.dma_crop_height;
-	pix_stride = param->dma_input.width;
+	width = param->dma_input.width;
+	height = param->dma_input.height;
 
 #if defined(CONFIG_CAMERA_PAFSTAT)
 	paf_ch = (hw_ip->id == DEV_HW_PAF1) ? 1 : 0;
@@ -385,7 +384,7 @@ int fimc_is_hw_paf_update_param(struct fimc_is_hw_ip *hw_ip, struct is_region *r
 
 	fimc_is_hw_paf_common_config(hw_paf->paf_core_regs, paf_ctx_addr, paf_ch, width, height);
 	fimc_is_hw_paf_rdma_set_addr(paf_rdma_addr, hw_paf->input_dva[0]);
-	fimc_is_hw_paf_rdma_config(paf_rdma_addr, hw_format, bitwidth, width, height, pix_stride);
+	fimc_is_hw_paf_rdma_config(paf_rdma_addr, hw_format, bitwidth, width, height);
 #endif
 
 	return ret;

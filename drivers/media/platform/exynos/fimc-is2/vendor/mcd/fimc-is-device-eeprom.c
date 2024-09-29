@@ -31,7 +31,6 @@
 #define DRIVER_NAME_FRONT2 "front2-eeprom-i2c"
 #define DRIVER_NAME_REAR3 "rear3-eeprom-i2c"
 #define DRIVER_NAME_FRONT3 "front3-eeprom-i2c"
-#define DRIVER_NAME_REAR4 "rear4-eeprom-i2c"
 
 /*
  * Samsung Exynos5 SoC series FIMC-IS driver
@@ -69,7 +68,6 @@ int sensor_eeprom_probe(struct i2c_client *client,
 
 	if (id->driver_data >= ROM_ID_REAR && id->driver_data < ROM_ID_MAX) {
 		specific->eeprom_client[id->driver_data] = client;
-		specific->rom_type[id->driver_data] = ROM_TYPE_EEPROM;
 		specific->rom_valid[id->driver_data] = true;
 	} else {
 		probe_err("rear eeprom device is failed!");
@@ -139,9 +137,6 @@ static const struct of_device_id exynos_fimc_is_sensor_eeprom_match[] = {
 	{
 		.compatible = "samsung,front3-eeprom-i2c", .data = (void *)ROM_ID_FRONT3
 	},
-	{
-		.compatible = "samsung,rear4-eeprom-i2c", .data = (void *)ROM_ID_REAR4
-	},
 	{},
 };
 #endif
@@ -153,7 +148,6 @@ static const struct i2c_device_id sensor_eeprom_idt[] = {
 	{ DRIVER_NAME_FRONT2, ROM_ID_FRONT2 },
 	{ DRIVER_NAME_REAR3, ROM_ID_REAR3 },
 	{ DRIVER_NAME_FRONT3, ROM_ID_FRONT3 },
-	{ DRIVER_NAME_REAR4, ROM_ID_REAR4 },
 	{},
 };
 

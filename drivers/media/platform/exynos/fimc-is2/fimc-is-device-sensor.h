@@ -213,9 +213,6 @@ enum fimc_is_ex_mode {
 	EX_PDAF_OFF = 5,
 	EX_3DHDR = 6,
 	EX_PDSTAT_OFF = 7,
-	EX_CROP_ZOOM = 8,
-	EX_SEAMLESS_TETRA = 9,	/* for extending to seamless fuction such as 3DHDR + Seamless */
-	EX_LOW_RES_TETRA = 10,	/* For EXTEND_SENSOR_MODE_CROPPED_REMOSAIC */
 };
 
 struct fimc_is_sensor_cfg {
@@ -438,9 +435,6 @@ struct fimc_is_device_sensor {
 	float					chk_wb[WB_GAIN_COUNT];
 	u32					init_wb_cnt;
 #endif
-#ifdef ENABLE_MODECHANGE_CAPTURE
-	struct fimc_is_frame					*mode_chg_frame;
-#endif
 };
 
 int fimc_is_sensor_open(struct fimc_is_device_sensor *device,
@@ -508,7 +502,6 @@ int fimc_is_sensor_g_bns_width(struct fimc_is_device_sensor *device);
 int fimc_is_sensor_g_bns_height(struct fimc_is_device_sensor *device);
 int fimc_is_sensor_g_bns_ratio(struct fimc_is_device_sensor *device);
 int fimc_is_sensor_g_bratio(struct fimc_is_device_sensor *device);
-int fimc_is_sensor_g_sensorcrop_bratio(struct fimc_is_device_sensor *device);
 int fimc_is_sensor_g_module(struct fimc_is_device_sensor *device,
 	struct fimc_is_module_enum **module);
 int fimc_is_sensor_deinit_module(struct fimc_is_module_enum *module);

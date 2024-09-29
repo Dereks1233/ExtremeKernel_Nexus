@@ -140,23 +140,20 @@ static int write_file_contents(struct file *fp, struct fimc_is_binary *bin)
 	ssize_t ret;
 	ssize_t count;
 	loff_t pos = 0;
-	loff_t pos_temp = 0;
 	char *buf = (char *)bin->data;
 
 	do {
 		count = min_t(ssize_t, PAGE_SIZE, bin->size - pos);
-		ret = kernel_write(fp, buf, count, &pos_temp);
+		ret = kernel_write(fp, buf, count, &pos);
 		if (ret > 0) {
-			pos_temp += ret;
 			pos += ret;
 			buf += ret;
-			ret = 0;
 		} else {
 			break;
 		}
 	} while (pos < bin->size);
 
-	return ret;
+	return 0;
 }
 
 /**

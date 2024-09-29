@@ -99,30 +99,40 @@ int fimc_is_search_sensor_module_with_position(struct fimc_is_device_sensor *dev
 	module_enum = device->module_enum;
 	*module = NULL;
 
-	if (position < SENSOR_POSITION_MAX) {
-		/* physical sensor position */
-		sensor_id = priv->sensor_id[position];
-		if (!sensor_id) {
-			merr("invalid module position(P)(%d)", device, position);
-			ret = -EINVAL;
-			goto p_err;
-		}
-	} else {
-		/* virtual sensor position */
-		switch (position) {
+	switch (position) {
+	case SENSOR_POSITION_REAR:
+		sensor_id = priv->rear_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT:
+		sensor_id = priv->front_sensor_id;
+		break;
+	case SENSOR_POSITION_REAR2:
+		sensor_id = priv->rear2_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT2:
+		sensor_id = priv->front2_sensor_id;
+		break;
+	case SENSOR_POSITION_REAR3:
+		sensor_id = priv->rear3_sensor_id;
+		break;
 #if defined(SECURE_CAMERA_IRIS)
-		case SENSOR_POSITION_SECURE:
-			sensor_id = priv->secure_sensor_id;
-			break;
+	case SENSOR_POSITION_SECURE:
+		sensor_id = priv->secure_sensor_id;
+		break;
 #endif
-		case SENSOR_POSITION_VIRTUAL:
-			sensor_id = SENSOR_NAME_VIRTUAL;
-			break;
-		default:
-			merr("invalid module position(V)(%d)", device, position);
-			ret = -EINVAL;
-			goto p_err;
-		}
+	case SENSOR_POSITION_REAR_TOF:
+		sensor_id = priv->rear_tof_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT_TOF:
+		sensor_id = priv->front_tof_sensor_id;
+		break;
+	case SENSOR_POSITION_VIRTUAL:
+		sensor_id = SENSOR_NAME_VIRTUAL;
+		break;
+	default:
+		merr("invalid module position(%d)", device, position);
+		ret = -EINVAL;
+		goto p_err;
 	}
 
 	mmax = atomic_read(&device->module_count);
@@ -1010,28 +1020,8 @@ int fimc_is_sensor_dm_tag(struct fimc_is_device_sensor *device,
 #ifdef DBG_JITTER
 		fimc_is_jitter(frame->shot->dm.sensor.timeStamp);
 #endif
-		if (CHK_REMOSAIC_SCN(frame->shot->ctl.aa.captureIntent)) {
-			struct fimc_is_module_enum *module =
-				(struct fimc_is_module_enum *)v4l2_get_subdevdata(device->subdev_module);
-			struct fimc_is_device_sensor_peri *sensor_peri;
-			struct fimc_is_sensor_interface *itf;
-
-			if (!module) {
-				merr("module is NULL", device);
-				return -EINVAL;
-			}
-
-			sensor_peri = (struct fimc_is_device_sensor_peri *)module->private_data;
-			if (sensor_peri == NULL) {
-				merr("sensor_peri is null", device);
-				return -EINVAL;
-			}
-
-			itf = &sensor_peri->sensor_interface;
-			itf->cis_itf_ops.update_sensor_dynamic_meta(itf, frame->fcount,
-					&frame->shot->ctl, &frame->shot->dm, &frame->shot->udm);
-		}
 	}
+
 	return ret;
 }
 
@@ -1284,6 +1274,9 @@ static int fimc_is_sensor_notify_by_line(struct fimc_is_device_sensor *device,
 	struct fimc_is_frame *frame;
 
 	FIMC_BUG(!device);
+
+	if (device->line_fcount == 0)
+		device->line_fcount = 1;
 
 	device->line_fcount++;
 
@@ -1917,7 +1910,7 @@ p_err:
 }
 
 int fimc_is_sensor_s_input(struct fimc_is_device_sensor *device,
-	u32 position,
+	u32 input,
 	u32 scenario,
 	u32 video_id)
 {
@@ -1944,6 +1937,7 @@ int fimc_is_sensor_s_input(struct fimc_is_device_sensor *device,
 	FIMC_BUG(!device);
 	FIMC_BUG(!device->pdata);
 	FIMC_BUG(!device->subdev_csi);
+	FIMC_BUG(input >= SENSOR_NAME_END);
 
 	if (test_bit(FIMC_IS_SENSOR_S_INPUT, &device->state)) {
 		merr("already s_input", device);
@@ -1962,30 +1956,40 @@ int fimc_is_sensor_s_input(struct fimc_is_device_sensor *device,
 		goto p_err;
 	}
 
-	if (position < SENSOR_POSITION_MAX) {
-		/* physical sensor position */
-		sensor_id = priv->sensor_id[position];
-		if (!sensor_id) {
-			merr("invalid module position(P)(%d)", device, position);
-			ret = -EINVAL;
-			goto p_err;
-		}
-	} else {
-		/* virtual sensor position */
-		switch (position) {
+	switch (input) {
+	case SENSOR_POSITION_REAR:
+		sensor_id = priv->rear_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT:
+		sensor_id = priv->front_sensor_id;
+		break;
+	case SENSOR_POSITION_REAR2:
+		sensor_id = priv->rear2_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT2:
+		sensor_id = priv->front2_sensor_id;
+		break;
+	case SENSOR_POSITION_REAR3:
+		sensor_id = priv->rear3_sensor_id;
+		break;
 #if defined(SECURE_CAMERA_IRIS)
-		case SENSOR_POSITION_SECURE:
-			sensor_id = priv->secure_sensor_id;
-			break;
+	case SENSOR_POSITION_SECURE:
+		sensor_id = priv->secure_sensor_id;
+		break;
 #endif
-		case SENSOR_POSITION_VIRTUAL:
-			sensor_id = SENSOR_NAME_VIRTUAL;
-			break;
-		default:
-			merr("invalid module position(V)(%d)", device, position);
-			ret = -EINVAL;
-			goto p_err;
-		}
+	case SENSOR_POSITION_REAR_TOF:
+		sensor_id = priv->rear_tof_sensor_id;
+		break;
+	case SENSOR_POSITION_FRONT_TOF:
+		sensor_id = priv->front_tof_sensor_id;
+		break;
+	case SENSOR_POSITION_VIRTUAL:
+		sensor_id = SENSOR_NAME_VIRTUAL;
+		break;
+	default:
+		merr("invalid module position(%d)", device, input);
+		ret = -EINVAL;
+		goto p_err;
 	}
 
 	module_count = atomic_read(&device->module_count);
@@ -2181,17 +2185,14 @@ int fimc_is_sensor_s_input(struct fimc_is_device_sensor *device,
 #endif
 
 #ifdef ENABLE_INIT_AWB
-	switch (position) {
+	switch (input) {
 	case SENSOR_POSITION_REAR:
 	case SENSOR_POSITION_REAR2:
 	case SENSOR_POSITION_REAR3:
-	case SENSOR_POSITION_REAR4:
 		device->init_wb_cnt = INIT_AWB_COUNT_REAR;
 		break;
 	case SENSOR_POSITION_FRONT:
 	case SENSOR_POSITION_FRONT2:
-	case SENSOR_POSITION_FRONT3:
-	case SENSOR_POSITION_FRONT4:
 		device->init_wb_cnt = INIT_AWB_COUNT_FRONT;
 		break;
 	default:
@@ -2307,7 +2308,7 @@ p_err:
 			device->pdata->scenario, SMC_SECCAM_UNPREPARE);
 #endif
 
-	minfo("[SEN:D] %s(%d, %d):%d\n", device, __func__, position, scenario, ret);
+	minfo("[SEN:D] %s(%d, %d):%d\n", device, __func__, input, scenario, ret);
 	return ret;
 }
 
@@ -2858,30 +2859,6 @@ int fimc_is_sensor_g_bratio(struct fimc_is_device_sensor *device)
 
 	if (device->image.window.width == 1988 && device->image.window.height == 1120)
 		binning = 1995;
-
-p_err:
-	return binning;
-}
-
-int fimc_is_sensor_g_sensorcrop_bratio(struct fimc_is_device_sensor *device)
-{
-	int binning = 0;
-	struct fimc_is_module_enum *module;
-
-	FIMC_BUG(!device);
-	FIMC_BUG(!device->subdev_module);
-
-	module = (struct fimc_is_module_enum *)v4l2_get_subdevdata(device->subdev_module);
-	if (!module) {
-		merr("module is NULL", device);
-		goto p_err;
-	}
-
-	/* remosaic crop size is 2 times tetra size */
-	binning = min(BINNING(module->active_width, device->image.window.width * 2),
-		BINNING(module->active_height, device->image.window.height * 2));
-	/* sensor binning only support natural number */
-	binning = (binning / 1000) * 1000;
 
 p_err:
 	return binning;

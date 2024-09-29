@@ -1488,7 +1488,8 @@ static int fimc_is_sensor_subdev_internal_stop(struct fimc_is_device_sensor *dev
 	struct fimc_is_device_csi *csi;
 	struct fimc_is_subdev *dma_subdev;
 	struct fimc_is_framemgr *framemgr;
-	enum fimc_is_frame_state state;
+	struct fimc_is_frame *frame;
+	unsigned long flags;
 
 	csi = (struct fimc_is_device_csi *)v4l2_get_subdevdata(device->subdev_csi);
 	if (!csi) {
@@ -1522,21 +1523,27 @@ static int fimc_is_sensor_subdev_internal_stop(struct fimc_is_device_sensor *dev
 			continue;
 		}
 
-		for (state = FS_REQUEST; state <= FS_COMPLETE; state++) {
-			unsigned int retry = 10;
-			unsigned int q_count = framemgr->queued_count[state];
+		framemgr_e_barrier_irqs(framemgr, FMGR_IDX_16, flags);
 
-			while (--retry && q_count) {
-				mswarn("%s(%d) waiting...", dma_subdev, dma_subdev,
-					frame_state_name[state], q_count);
-
-				usleep_range(5000, 5100);
-				q_count = framemgr->queued_count[state];
-			}
-
-			if (!retry)
-				mswarn("waiting(until frame empty) is fail", dma_subdev, dma_subdev);
+		frame = peek_frame(framemgr, FS_PROCESS);
+		while (frame) {
+			trans_frame(framemgr, frame, FS_COMPLETE);
+			frame = peek_frame(framemgr, FS_PROCESS);
 		}
+
+		frame = peek_frame(framemgr, FS_REQUEST);
+		while (frame) {
+			trans_frame(framemgr, frame, FS_COMPLETE);
+			frame = peek_frame(framemgr, FS_REQUEST);
+		}
+
+		frame = peek_frame(framemgr, FS_COMPLETE);
+		while (frame) {
+			trans_frame(framemgr, frame, FS_FREE);
+			frame = peek_frame(framemgr, FS_COMPLETE);
+		}
+
+		framemgr_x_barrier_irqr(framemgr, FMGR_IDX_16, flags);
 
 		clear_bit(FIMC_IS_SUBDEV_START, &dma_subdev->state);
 

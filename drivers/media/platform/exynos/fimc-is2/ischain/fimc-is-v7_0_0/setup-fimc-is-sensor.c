@@ -24,8 +24,6 @@
 #include <linux/of_gpio.h>
 #endif
 
-#include <soc/samsung/cal-if.h>
-
 #include <exynos-fimc-is.h>
 #include <exynos-fimc-is-sensor.h>
 #include <exynos-fimc-is-module.h>
@@ -166,9 +164,6 @@ int exynos9820_fimc_is_sensor_mclk_on(struct device *dev,
 	snprintf(clk_name, sizeof(clk_name), "MUX_CIS_CLK%d", channel);
 	fimc_is_enable(dev, clk_name);
 
-	if (channel == 4)
-		cal_fimc_is_mclk_control(1, channel);
-
 	return 0;
 }
 
@@ -185,9 +180,6 @@ int exynos9820_fimc_is_sensor_mclk_off(struct device *dev,
 
 	snprintf(clk_name, sizeof(clk_name), "CIS_CLK%d", channel);
 	fimc_is_disable(dev, clk_name);
-
-	if (channel == 4)
-		cal_fimc_is_mclk_control(0, channel);
 
 	return 0;
 }

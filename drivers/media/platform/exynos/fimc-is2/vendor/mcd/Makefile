@@ -1,5 +1,4 @@
 obj-$(CONFIG_VENDER_MCD) := fimc-is-vender.o \
-				fimc-is-vender-caminfo.o \
 				fimc-is-sec-define.o \
 				crc32.o \
 				fimc-is-sysfs.o \

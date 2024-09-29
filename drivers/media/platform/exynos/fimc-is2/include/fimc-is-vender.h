@@ -29,11 +29,6 @@
 #define VENDER_S_CTRL 0
 #define VENDER_G_CTRL 0
 
-#define SENSOR_RESET_LOW		"sen_rst low"
-#define SENSOR_RESET_HIGH		"sen_rst high"
-#define SENSOR_MCLK_PIN		"pin"
-#define SENSOR_SET_DELAY		"delay"
-
 struct fimc_is_vender {
 	char fw_path[FIMC_IS_PATH_LEN];
 	char request_fw_path[FIMC_IS_PATH_LEN];
@@ -58,7 +53,6 @@ enum fimc_is_rom_id {
 	ROM_ID_FRONT2	= 3,
 	ROM_ID_REAR3	= 4,
 	ROM_ID_FRONT3	= 5,
-	ROM_ID_REAR4	= 6,
 	ROM_ID_MAX,
 	ROM_ID_NOTHING	= 100
 };
@@ -115,7 +109,6 @@ struct cam_hw_param_collector {
 	struct cam_hw_param rear_hwparam;
 	struct cam_hw_param rear2_hwparam;
 	struct cam_hw_param rear3_hwparam;
-	struct cam_hw_param rear4_hwparam;
 	struct cam_hw_param front_hwparam;
 	struct cam_hw_param front2_hwparam;
 	struct cam_hw_param rear_tof_hwparam;
@@ -182,5 +175,4 @@ int fimc_is_vendor_get_rom_id_from_position(int position);
 void fimc_is_vendor_get_rom_info_from_position(int position, int *rom_type, int *rom_id, int *rom_cal_index);
 void fimc_is_vendor_get_rom_dualcal_info_from_position(int position, int *rom_type, int *rom_dualcal_id, int *rom_dualcal_index);
 bool fimc_is_vendor_check_camera_running(int position);
-bool fimc_is_vender_is_hw_init_running(void);
 #endif

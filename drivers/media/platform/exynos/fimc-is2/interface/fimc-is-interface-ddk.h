@@ -111,9 +111,6 @@ struct taa_param_set {
 	u32				instance_id;
 	u32				fcount;
 	bool				reprocessing;
-#ifdef CHAIN_USE_STRIPE_PROCESSING
-	struct param_stripe_input	stripe_input;
-#endif
 };
 
 struct isp_param_set {
@@ -135,9 +132,6 @@ struct isp_param_set {
 	u32				instance_id;
 	u32				fcount;
 	bool				reprocessing;
-#ifdef CHAIN_USE_STRIPE_PROCESSING
-	struct param_stripe_input	stripe_input;
-#endif
 };
 
 struct tpu_param_set {

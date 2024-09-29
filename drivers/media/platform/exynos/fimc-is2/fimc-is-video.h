@@ -241,8 +241,7 @@ enum fimc_is_queue_state {
 	FIMC_IS_QUEUE_BUFFER_PREPARED,
 	FIMC_IS_QUEUE_BUFFER_READY,
 	FIMC_IS_QUEUE_STREAM_ON,
-	IS_QUEUE_NEED_TO_REMAP,	/* need remapped DVA with specific attribute */
-	IS_QUEUE_NEED_TO_KMAP,	/* need permanent KVA for image planes */
+	IS_QUEUE_NEED_TO_REMAP,
 };
 
 struct fimc_is_frame_cfg {

@@ -25,7 +25,6 @@ static u32  secure_sensor_id;
 #endif
 static u32  front2_sensor_id;
 static u32  rear3_sensor_id;
-static u32  rear4_sensor_id;
 static u32  ois_sensor_index;
 static u32  aperture_sensor_index;
 
@@ -58,15 +57,14 @@ int fimc_is_vender_probe(struct fimc_is_vender *vender)
 		return -ENOMEM;
 	}
 
-	priv->sensor_id[SENSOR_POSITION_REAR] = rear_sensor_id;
-	priv->sensor_id[SENSOR_POSITION_FRONT] = front_sensor_id;
-	priv->sensor_id[SENSOR_POSITION_REAR2] = rear2_sensor_id;
-	priv->sensor_id[SENSOR_POSITION_FRONT2] = front2_sensor_id;
-	priv->sensor_id[SENSOR_POSITION_REAR3] = rear3_sensor_id;
-	priv->sensor_id[SENSOR_POSITION_REAR4] = rear4_sensor_id;
+	priv->rear_sensor_id = rear_sensor_id;
+	priv->front_sensor_id = front_sensor_id;
+	priv->rear2_sensor_id = rear2_sensor_id;
 #ifdef CONFIG_SECURE_CAMERA_USE
 	priv->secure_sensor_id = secure_sensor_id;
 #endif
+	priv->front2_sensor_id = front2_sensor_id;
+	priv->rear3_sensor_id = rear3_sensor_id;
 	priv->ois_sensor_index = ois_sensor_index;
 	priv->aperture_sensor_index = aperture_sensor_index;
 
@@ -103,10 +101,6 @@ int fimc_is_vender_dt(struct device_node *np)
 	ret = of_property_read_u32(np, "rear3_sensor_id", &rear3_sensor_id);
 	if (ret)
 		probe_err("rear3_sensor_id read is fail(%d)", ret);
-
-	ret = of_property_read_u32(np, "rear4_sensor_id", &rear4_sensor_id);
-	if (ret)
-		probe_err("rear4_sensor_id read is fail(%d)", ret);
 
 	ret = of_property_read_u32(np, "ois_sensor_index", &ois_sensor_index);
 	if (ret)
