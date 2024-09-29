@@ -23,14 +23,11 @@
 static struct device *abc_hub_dev;
 static int abc_hub_probed;
 
-#if IS_ENABLED(CONFIG_OF)
+#ifdef CONFIG_OF
 static int abc_hub_parse_dt(struct device *dev)
 {
 	struct abc_hub_platform_data *pdata = dev->platform_data;
 	struct device_node *np;
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
-	struct device_node *cond_np;
-#endif
 
 	np = dev->of_node;
 	pdata->nSub = of_get_child_count(np);
@@ -39,16 +36,13 @@ static int abc_hub_parse_dt(struct device *dev)
 		return -ENODEV;
 	}
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
-	cond_np = of_find_node_by_name(np, "cond");
-	if (cond_np) {
-		if (parse_cond_data(dev, pdata, cond_np) < 0)
-			dev_info(dev, "sub module(cond) is not supported\n");
-		else
-			pdata->cond.init = 1;
-	}
+#ifdef CONFIG_SEC_ABC_HUB_COND
+	if (parse_cond_data(dev, pdata, np) < 0)
+		dev_info(dev, "sub module(cond) is not supported\n");
+	else
+		pdata->cond_pdata.init = 1;
 #endif
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 	if (parse_bootc_data(dev, pdata, np) < 0)
 		dev_info(dev, "sub module(bootc) is not supported\n");
 	else
@@ -58,7 +52,7 @@ static int abc_hub_parse_dt(struct device *dev)
 }
 #endif
 
-#if IS_ENABLED(CONFIG_OF)
+#ifdef CONFIG_OF
 static const struct of_device_id abc_hub_dt_match[] = {
 	{ .compatible = "samsung,abc_hub" },
 	{ }
@@ -68,10 +62,10 @@ static const struct of_device_id abc_hub_dt_match[] = {
 static int abc_hub_suspend(struct device *dev)
 {
 	int ret = 0;
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
+#ifdef CONFIG_SEC_ABC_HUB_COND
 	struct abc_hub_info *pinfo = dev_get_drvdata(dev);
 
-	if (pinfo->pdata->cond.init)
+	if (pinfo->pdata->cond_pdata.init)
 		ret = abc_hub_cond_suspend(dev);
 #endif
 	return ret;
@@ -80,10 +74,10 @@ static int abc_hub_suspend(struct device *dev)
 static int abc_hub_resume(struct device *dev)
 {
 	int ret = 0;
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
+#ifdef CONFIG_SEC_ABC_HUB_COND
 	struct abc_hub_info *pinfo = dev_get_drvdata(dev);
 
-	if (pinfo->pdata->cond.init)
+	if (pinfo->pdata->cond_pdata.init)
 		ret = abc_hub_cond_resume(dev);
 #endif
 	return ret;
@@ -91,6 +85,11 @@ static int abc_hub_resume(struct device *dev)
 
 static int abc_hub_remove(struct platform_device *pdev)
 {
+#ifdef CONFIG_SEC_ABC_HUB_COND
+	struct abc_hub_info *pinfo = platform_get_drvdata(pdev);
+	
+    mutex_destroy(&pinfo->pdata->cond_pdata.cond_lock);
+#endif
 	return 0;
 }
 
@@ -113,22 +112,22 @@ static ssize_t store_abc_hub_enable(struct device *dev,
 			dev_err(dev, "abc driver is not enabled\n");
 
 		pinfo->enabled = ABC_HUB_ENABLED;
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
-		if (pinfo->pdata->cond.init)
+#ifdef CONFIG_SEC_ABC_HUB_COND
+		if (pinfo->pdata->cond_pdata.init)
 			abc_hub_cond_enable(dev, pinfo->enabled);
 #endif
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 		if (pinfo->pdata->bootc_pdata.init)
 			abc_hub_bootc_enable(dev, pinfo->enabled);
 #endif
 	} else if (!strncmp(buf, "0", 1)) {
 		dev_info(dev, "abc_hub driver disabled.\n");
 		pinfo->enabled = ABC_HUB_DISABLED;
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
-		if (pinfo->pdata->cond.init)
+#ifdef CONFIG_SEC_ABC_HUB_COND
+		if (pinfo->pdata->cond_pdata.init)
 			abc_hub_cond_enable(dev, pinfo->enabled);
 #endif
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 		if (pinfo->pdata->bootc_pdata.init)
 			abc_hub_bootc_enable(dev, pinfo->enabled);
 #endif
@@ -146,7 +145,7 @@ static ssize_t show_abc_hub_enable(struct device *dev,
 }
 static DEVICE_ATTR(enable, 0644, show_abc_hub_enable, store_abc_hub_enable);
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 static ssize_t store_abc_hub_bootc_offset(struct device *dev,
 				    struct device_attribute *attr,
 				    const char *buf, size_t count)
@@ -205,35 +204,6 @@ static ssize_t show_abc_hub_bootc_offset(struct device *dev,
 	return res;
 }
 static DEVICE_ATTR(bootc_offset, 0644, show_abc_hub_bootc_offset, store_abc_hub_bootc_offset);
-
-static ssize_t store_abc_hub_bootc_time(struct device *dev,
-				    struct device_attribute *attr,
-				    const char *buf, size_t count)
-{
-	struct abc_hub_info *pinfo = dev_get_drvdata(dev);
-
-	if (kstrtoint(buf, 0, &(pinfo->pdata->bootc_pdata.bootc_time))) {
-		pr_err("%s: failed to get bootc_time\n", __func__);
-		pinfo->pdata->bootc_pdata.bootc_time = -1;
-		return count;
-	}
-
-	pr_info("%s: bootc_time(%d)\n", __func__, pinfo->pdata->bootc_pdata.bootc_time);
-
-	return count;
-}
-
-static ssize_t show_abc_hub_bootc_time(struct device *dev,
-				   struct device_attribute *attr,
-				   char *buf)
-{
-	struct abc_hub_info *pinfo = dev_get_drvdata(dev);
-
-	int res = sprintf(buf, "%d\n", pinfo->pdata->bootc_pdata.bootc_time);
-
-	return res;
-}
-static DEVICE_ATTR(bootc_time, 0644, show_abc_hub_bootc_time, store_abc_hub_bootc_time);
 #endif
 
 int abc_hub_get_enabled(void)
@@ -292,15 +262,14 @@ static int abc_hub_probe(struct platform_device *pdev)
 
 		if (!pdata) {
 			dev_err(&pdev->dev, "Failed to allocate platform data\n");
-			ret = -ENOMEM;
-			goto out;
+			return -ENOMEM;
 		}
 
 		pdev->dev.platform_data = pdata;
 		ret = abc_hub_parse_dt(&pdev->dev);
 		if (ret) {
 			dev_err(&pdev->dev, "Failed to parse dt data\n");
-			goto err_parse_dt;
+			return ret;
 		}
 
 		pr_info("%s: parse dt done\n", __func__);
@@ -310,27 +279,20 @@ static int abc_hub_probe(struct platform_device *pdev)
 
 	if (!pdata) {
 		dev_err(&pdev->dev, "There are no platform data\n");
-		ret = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 
 	pinfo = kzalloc(sizeof(*pinfo), GFP_KERNEL);
 
-	if (!pinfo) {
-		ret = -ENOMEM;
-		goto err_alloc_pinfo;
-	}
-#if IS_ENABLED(CONFIG_DRV_SAMSUNG)
+	if (!pinfo)
+		return -ENOMEM;
+
 	pinfo->dev = sec_device_create(pinfo, "sec_abc_hub");
-#else
-	pinfo->dev = device_create(sec_class, NULL, 0, NULL, "sec_abc_hub");
-#endif
 	if (IS_ERR(pinfo->dev)) {
 		pr_err("%s Failed to create device(sec_abc_hub)!\n", __func__);
 		ret = -ENODEV;
-		goto err_create_device;
+		goto out;
 	}
-	abc_hub_dev = pinfo->dev;
 
 	ret = device_create_file(pinfo->dev, &dev_attr_enable);
 	if (ret) {
@@ -339,34 +301,30 @@ static int abc_hub_probe(struct platform_device *pdev)
 		goto err_create_abc_hub_enable_sysfs;
 	}
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 	ret = device_create_file(pinfo->dev, &dev_attr_bootc_offset);
 	if (ret) {
 		pr_err("%s: Failed to create device bootc_offset file\n", __func__);
 		ret = -ENODEV;
 		goto err_create_abc_hub_bootc_offset_sysfs;
 	}
-
-	ret = device_create_file(pinfo->dev, &dev_attr_bootc_time);
-	if (ret) {
-		pr_err("%s: Failed to create device bootc_time file\n", __func__);
-		ret = -ENODEV;
-		goto err_create_abc_hub_bootc_time_sysfs;
-	}
 #endif
+
+	abc_hub_dev = pinfo->dev;
 	pinfo->pdata = pdata;
+
 	platform_set_drvdata(pdev, pinfo);
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_COND)
-	if (pdata->cond.init) {
+#ifdef CONFIG_SEC_ABC_HUB_COND
+	if (pdata->cond_pdata.init) {
 		if (abc_hub_cond_init(abc_hub_dev) < 0) {
 			dev_err(&pdev->dev, "abc_hub_cond_init fail\n");
-			pdata->cond.init = 0;
+			pdata->cond_pdata.init = 0;
 		}
 	}
 #endif
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 	if (pdata->bootc_pdata.init) {
 		if (abc_hub_bootc_init(abc_hub_dev) < 0) {
 			dev_err(&pdev->dev, "abc_hub_booc_init fail\n");
@@ -377,27 +335,19 @@ static int abc_hub_probe(struct platform_device *pdev)
 
 	abc_hub_probed = true;
 	dev_info(&pdev->dev, "%s success!\n", __func__);
+
 	return ret;
 
-#if IS_ENABLED(CONFIG_SEC_ABC_HUB_BOOTC)
-err_create_abc_hub_bootc_time_sysfs:
-	device_remove_file(pinfo->dev, &dev_attr_bootc_offset);
+#ifdef CONFIG_SEC_ABC_HUB_BOOTC
 err_create_abc_hub_bootc_offset_sysfs:
 	device_remove_file(pinfo->dev, &dev_attr_enable);
 #endif
 err_create_abc_hub_enable_sysfs:
-#if IS_ENABLED(CONFIG_DRV_SAMSUNG)
 	sec_device_destroy(abc_hub_dev->devt);
-#else
-	device_destroy(sec_class, abc_hub_dev->devt);
-#endif
-err_create_device:
-	kfree(pinfo);
-err_alloc_pinfo:
-err_parse_dt:
-	devm_kfree(&pdev->dev, pdata);
-	pdev->dev.platform_data =  NULL;
 out:
+	kfree(pinfo);
+	devm_kfree(&pdev->dev, pdata);
+
 	return ret;
 }
 
@@ -407,10 +357,10 @@ static struct platform_driver abc_hub_driver = {
 	.driver = {
 		.name = "abc_hub",
 		.owner = THIS_MODULE,
-#if IS_ENABLED(CONFIG_PM)
+#if defined(CONFIG_PM)
 		.pm	= &abc_hub_pm,
 #endif
-#if IS_ENABLED(CONFIG_OF)
+#if CONFIG_OF
 		.of_match_table = of_match_ptr(abc_hub_dt_match),
 #endif
 	},
