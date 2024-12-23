@@ -194,6 +194,9 @@ obj-$(CONFIG_SEC_EXT)           += samsung/
 # CCIC
 obj-y	+= ccic/
 
+# COMBO REDRIVER
+obj-$(CONFIG_COMBO_REDRIVER_PTN36502)	+= redriver/
+
 obj-$(CONFIG_EXYNOS_BTS)	+= bts/
 
 # Mobicore driver
