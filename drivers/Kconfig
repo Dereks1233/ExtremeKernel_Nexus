@@ -251,5 +251,4 @@ source "drivers/security/samsung/five_tee_driver/Kconfig"
 
 source "drivers/security/samsung/icdrv/Kconfig"
 
-source "drivers/kperfmon/Kconfig"
 endmenu
