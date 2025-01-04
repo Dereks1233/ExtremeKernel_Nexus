@@ -1001,7 +1001,6 @@ static int exynos_adc_probe(struct platform_device *pdev)
 	irq = platform_get_irq(pdev, 1);
 	if (irq == -EPROBE_DEFER)
 		return irq;
-
 	info->tsirq = irq;
 
 	info->dev = &pdev->dev;
