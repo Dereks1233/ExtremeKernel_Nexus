@@ -33,7 +33,11 @@
 __asm__ (
   ".section .init.data,\"aw\"\n"
   "tzdev_tzar_begin:\n"
+#ifndef CONFIG_TZDEV_DEPLOY_OLD_TZAR
   ".incbin \"startup.tzar\"\n"
+#else
+  ".incbin \"startup_old.tzar\"\n"
+#endif
   "tzdev_tzar_end:\n"
   ".previous\n"
 );

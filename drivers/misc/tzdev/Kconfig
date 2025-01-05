@@ -189,6 +189,13 @@ config TZDEV_DEPLOY_TZAR
 	help
 	  Deploy startup.tzar when tzdev init.
 
+config TZDEV_DEPLOY_OLD_TZAR
+	bool "Deploy old startup.tzar"
+	depends on TZDEV_DEPLOY_TZAR
+	default n
+	help
+	  Deploy old startup.tzar when tzdev init instead of current one, only specific devices need this, d2s and d1.
+
 choice
 	prompt "Choose per-cpu kthread workers variant"
 	default TZDEV_KTHREADS_NOTIFIER
