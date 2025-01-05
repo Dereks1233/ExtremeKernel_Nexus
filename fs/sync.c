@@ -25,7 +25,7 @@
 /* Interruptible sync for Samsung Mobile Device */
 /* @fs.sec -- 30cbf83784121f91517b701d9706bccd -- */
 
-static inline int sec_sys_sync() {
+static inline int sec_sys_sync(void) {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 19, 0)
 	ksys_sync();
 	return 0;
