@@ -16,7 +16,7 @@ Usage: $(basename "$0") [options]
 Options:
     -m, --model [value]      Specify the model code of the phone
     -k, --ksu [Y/n]          Include KernelSU
-    -p, --permissive [y/N]   Force SELinux status to permissive
+    -d, --debug [y/N]        Force SELinux status to permissive and add superuser driver, DO NOT USE UNLESS A DEV!
 EOF
 }
 
@@ -30,8 +30,8 @@ while [[ $# -gt 0 ]]; do
             KSU_OPTION="$2"
             shift 2
             ;;
-        --permissive|-p)
-            PERMISSIVE_OPTION="$2"
+        --debug|-d)
+            DEBUG_OPTION="$2"
             shift 2
             ;;
         *)\
@@ -138,8 +138,8 @@ if [[ "$KSU_OPTION" != "n" ]]; then
     KSU=ksu.config
 fi
 
-if [[ "$PERMISSIVE_OPTION" == "y" ]]; then
-    PERMISSIVE=permissive.config
+if [[ "$DEBUG_OPTION" == "y" ]]; then
+    DEBUG=debug.config
 fi
 
 rm -rf build/out/$MODEL
@@ -155,17 +155,17 @@ else
     echo "KSU: Yes"
 fi
 
-if [ -z "$PERMISSIVE" ]; then
-    echo "PERMISSIVE: No"
+if [ -z "$DEBUG" ]; then
+    echo "DEBUG: No"
 else
-    echo "PERMISSIVE: Yes"
+    echo "DEBUG: Yes"
 fi
 
 echo "-----------------------------------------------"
 echo "Building kernel using "$KERNEL_DEFCONFIG""
 echo "Generating configuration file..."
 echo "-----------------------------------------------"
-make ${MAKE_ARGS} -j$CORES exynos9820_defconfig $MODEL.config $KSU $PERMISSIVE || abort
+make ${MAKE_ARGS} -j$CORES exynos9820_defconfig $MODEL.config $KSU $DEBUG || abort
 
 echo "Building kernel..."
 echo "-----------------------------------------------"
