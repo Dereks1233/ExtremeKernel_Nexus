@@ -18,6 +18,7 @@
 				haptic,max_timeout = <10000>;
 				/* for multi-frequency */
 				haptic,multi_frequency = <7>;
+				haptic,frequency = <1595 1200 1500 2000 1800 2000 2000>;
 				haptic,duty   = <27551 27551 27551 27551 27551 27551 27551>;
 				haptic,period = <37741 37741 37741 37741 37741 37741 37741>;
 				haptic,reg2 = <0x82>;
@@ -25,7 +26,13 @@
 				haptic,regulator_name = "VDD_MOTOR_3P3";
 				haptic,normal_ratio = <75>;
 				haptic,overdrive_ratio = <95>;
-				haptic,type = "LINEAR_0832RC";
+				haptic,motor_type = "LINEAR_0832RC";
+				haptic,high_temp_ratio = <60>;
+				haptic,high_temp_ref = <>;
+				pwms = <4294967295 0 1000000 0>;
+				samsung,steps = <6>;
+				samsung,intensities = <0 3000 4000 6000 8000 10000>;
+				samsung,haptic_intensities = <0 2000 4000 6000 8000 10000>;
 			};
 		};
 	};
