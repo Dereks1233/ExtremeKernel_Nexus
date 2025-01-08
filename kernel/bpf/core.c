@@ -32,10 +32,6 @@
 #include <linux/kallsyms.h>
 #include <linux/rcupdate.h>
 
-#ifdef CONFIG_RKP
-#include <linux/rkp.h>
-#endif
-
 #include <asm/unaligned.h>
 
 /* Registers */
@@ -632,9 +628,6 @@ bpf_jit_binary_alloc(unsigned int proglen, u8 **image_ptr,
 void bpf_jit_binary_free(struct bpf_binary_header *hdr)
 {
 	u32 pages = hdr->pages;
-#ifdef CONFIG_RKP
-	uh_call(UH_APP_RKP, RKP_BPF_LOAD, (u64)hdr, (u64)(hdr->pages * 0x1000), 1, 0);
-#endif
 
 	module_memfree(hdr);
 	bpf_jit_uncharge_modmem(pages);
