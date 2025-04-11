@@ -148,6 +148,8 @@ static int max77705_vib_set_ratio(struct max77705_vibrator_drvdata *ddata)
 {
 	int ratio;
 
+	ratio = ddata->pdata->normal_ratio;
+
 	pr_info("ratio set to %d\n", ratio);
 
 	return ratio;
