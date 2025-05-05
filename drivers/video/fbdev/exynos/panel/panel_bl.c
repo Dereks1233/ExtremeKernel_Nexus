@@ -722,6 +722,10 @@ static int panel_get_brightness(struct backlight_device *bd)
 	return get_actual_brightness(panel_bl, bd->props.brightness);
 }
 
+#ifdef CONFIG_ONEUI7_WORKAROUND
+static bool bootanim_set_brightness = false;
+#endif
+
 int panel_update_brightness(struct panel_device *panel)
 {
 	int ret = 0;
@@ -733,7 +737,11 @@ int panel_update_brightness(struct panel_device *panel)
 	mutex_lock(&panel->op_lock);
 	brightness = bd->props.brightness;
 #ifdef CONFIG_ONEUI7_WORKAROUND
-	brightness *= 100;
+ 	// Only work around this if we are past boot animation.
+ 	if (bootanim_set_brightness)
+ 		brightness *= 100;
+ 	else
+ 		bootanim_set_brightness = true;
 #endif
 	id = panel_bl->props.id;
 	if (!is_valid_brightness(panel_bl, brightness)) {
