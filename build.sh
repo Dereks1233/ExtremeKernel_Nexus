@@ -109,10 +109,18 @@ d2x)
     BOARD=SRPSC14C009KU
     SOC=exynos9825
 ;;
+d2xks)
+    BOARD=SRPSD23C002KU
+    SOC=exynos9825
+;;
 *)
     unset_flags
     exit
 esac
+
+if [[ "$MODEL" == "d2xks" ]]; then
+    MODEL=d2x
+fi
 
 if [[ "$KSU_OPTION" != "n" ]]; then
     KSU=ksu.config
