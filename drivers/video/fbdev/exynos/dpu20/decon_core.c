@@ -37,7 +37,9 @@
 #include <linux/memblock.h>
 #include <linux/bug.h>
 #include <linux/of_address.h>
+#ifdef CONFIG_DEBUG_FS
 #include <linux/debugfs.h>
+#endif
 #include <linux/pinctrl/consumer.h>
 #include <video/mipi_display.h>
 #include <media/v4l2-subdev.h>
@@ -4662,9 +4664,11 @@ static int decon_probe(struct platform_device *pdev)
 	if (ret)
 		goto err_pinctrl;
 
+#ifdef CONFIG_DEBUG_FS
 	ret = decon_create_debugfs(decon);
 	if (ret)
 		goto err_pinctrl;
+#endif
 
 	ret = decon_register_doze_hiber_work(decon);
 	if (ret)
