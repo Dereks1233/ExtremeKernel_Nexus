@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExtremeKRNL-Nexus-d1
-          path: build/out/d1/ExtremeKRNL-Nexus-d1.zip
+          path: build/out/d1/zip
 
   build_d1xks:
     needs: setup
@@ -59,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExtremeKRNL-Nexus-d1xks
-          path: build/out/d1xks/ExtremeKRNL-Nexus-d1xks.zip
+          path: build/out/d1xks/zip
 
   build_d2s:
     needs: setup
@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExtremeKRNL-Nexus-d2s
-          path: build/out/d2s/ExtremeKRNL-Nexus-d2s.zip
+          path: build/out/d2s/zip
 
   build_d2x:
     needs: setup
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExtremeKRNL-Nexus-d2x
-          path: build/out/d2x/ExtremeKRNL-Nexus-d2x.zip
+          path: build/out/d2x/zip
 
   build_d2xks:
     needs: setup
@@ -107,4 +107,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ExtremeKRNL-Nexus-d2xks
-          path: build/out/d2xks/ExtremeKRNL-Nexus-d2xks.zip
+          path: build/out/d2xks/zip

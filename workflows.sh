@@ -223,8 +223,6 @@ cp build/update-binary build/out/$MODEL/zip/META-INF/com/google/android/update-b
 cp build/updater-script build/out/$MODEL/zip/META-INF/com/google/android/updater-script
 
 pushd build/out/$MODEL/zip > /dev/null
-
-zip -r ../ExtremeKRNL-Nexus-"$MODEL".zip .
 popd > /dev/null
 popd > /dev/null
 
