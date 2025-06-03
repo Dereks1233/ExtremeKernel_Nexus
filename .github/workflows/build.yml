@@ -1,0 +1,110 @@
+name: Kernel Build Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Model to build (leave empty to build all)"
+        required: false
+        default: "all"
+        type: choice
+        options:
+        - all
+        - d1
+        - d1xks
+        - d2s
+        - d2x
+        - d2xks
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build_all: ${{ github.event.inputs.model == 'all' }}
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev libc6-dev-i386 x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+      - name: Set should_build_all output
+        run: echo "should_build_all=${{ github.event.inputs.model == 'all' }}" >> $GITHUB_OUTPUT
+
+  build_d1:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.model == 'd1' || needs.setup.outputs.should_build_all == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build for d1
+        run: ./build.sh -m d1 -k Y -d N
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-d1
+          path: build/out/d1/*.zip
+
+  build_d1xks:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.model == 'd1xks' || needs.setup.outputs.should_build_all == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build for d1xks
+        run: ./build.sh -m d1xks -k Y -d N
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-d1xks
+          path: build/out/d1xks/*.zip
+
+  build_d2s:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.model == 'd2s' || needs.setup.outputs.should_build_all == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build for d2s
+        run: ./build.sh -m d2s -k Y -d N
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-d2s
+          path: build/out/d2s/*.zip
+
+  build_d2x:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.model == 'd2x' || needs.setup.outputs.should_build_all == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build for d2x
+        run: ./build.sh -m d2x -k Y -d N
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-d2x
+          path: build/out/d2x/*.zip
+
+  build_d2xks:
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.model == 'd2xks' || needs.setup.outputs.should_build_all == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: Build for d2xks
+        run: ./build.sh -m d2xks -k Y -d N
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-d2xks
+          path: build/out/d2xks/*.zip
