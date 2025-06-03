@@ -38,7 +38,7 @@ jobs:
         with:
           submodules: 'recursive'
       - name: Build for d1
-        run: ./build.sh -m d1 -k Y -d N
+        run: ./workflows.sh -m d1 -k Y -d N
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -54,7 +54,7 @@ jobs:
         with:
           submodules: 'recursive'
       - name: Build for d1xks
-        run: ./build.sh -m d1xks -k Y -d N
+        run: ./workflows.sh -m d1xks -k Y -d N
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -70,7 +70,7 @@ jobs:
         with:
           submodules: 'recursive'
       - name: Build for d2s
-        run: ./build.sh -m d2s -k Y -d N
+        run: ./workflows.sh -m d2s -k Y -d N
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -86,7 +86,7 @@ jobs:
         with:
           submodules: 'recursive'
       - name: Build for d2x
-        run: ./build.sh -m d2x -k Y -d N
+        run: ./workflows.sh -m d2x -k Y -d N
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -102,7 +102,7 @@ jobs:
         with:
           submodules: 'recursive'
       - name: Build for d2xks
-        run: ./build.sh -m d2xks -k Y -d N
+        run: ./workflows.sh -m d2xks -k Y -d N
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
