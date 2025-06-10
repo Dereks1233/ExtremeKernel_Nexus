@@ -37,6 +37,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: Update submodules
+        run: git submodule update --init --recursive --remote
       - name: Build for d1
         run: ./workflows.sh -m d1 -k Y -d N
       - name: Upload artifact
@@ -53,6 +55,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: Update submodules
+        run: git submodule update --init --recursive --remote
       - name: Build for d1xks
         run: ./workflows.sh -m d1xks -k Y -d N
       - name: Upload artifact
@@ -69,6 +73,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: Update submodules
+        run: git submodule update --init --recursive --remote
       - name: Build for d2s
         run: ./workflows.sh -m d2s -k Y -d N
       - name: Upload artifact
@@ -85,6 +91,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: Update submodules
+        run: git submodule update --init --recursive --remote
       - name: Build for d2x
         run: ./workflows.sh -m d2x -k Y -d N
       - name: Upload artifact
@@ -101,6 +109,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+      - name: Update submodules
+        run: git submodule update --init --recursive --remote
       - name: Build for d2xks
         run: ./workflows.sh -m d2xks -k Y -d N
       - name: Upload artifact
