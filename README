@@ -1,18 +1,38 @@
-Linux kernel
-============
+ExtremeKernel for Exynos 9825 devices
+Supported devices:
+N970F - Note 10 - d1
 
-This file was moved to Documentation/admin-guide/README.rst
+N971N - Note 10 5G (Korean) - d1xks
 
-Please notice that there are several guides for kernel developers and users.
-These guides can be rendered in a number of formats, like HTML and PDF.
+N975F - Note 10+ - d2s
 
-In order to build the documentation, use ``make htmldocs`` or
-``make pdfdocs``.
+N976B - Note 10+ 5G - d2x
 
-There are various text files in the Documentation/ subdirectory,
-several of them using the Restructured Text markup notation.
-See Documentation/00-INDEX for a list of what is contained in each file.
+N976N - Note 10+ 5G (Korean) - d2xks
 
-Please read the Documentation/process/changes.rst file, as it contains the
-requirements for building and running the kernel, and information about
-the problems which may result by upgrading your kernel.
+Build instructions:
+Set up build environment as per Google documentation
+https://source.android.com/docs/setup/start/requirements
+
+Properly clone repository with submodules (KernelSU and toolchains)
+git clone --recurse-submodules https://github.com/Dereks1233/ExtremeKernel_Nexus.git
+
+Build for your device
+./build.sh -m d2s
+
+Fetch the flashable zip of the kernel that was just compiled
+build/out/[your_device]/ExtremeKernel...zip
+
+Flash it using a supported recovery like TWRP
+
+Enjoy!
+
+Thanks to:
+
+ExtremeXT For this kernel
+
+Ocin4ever For His kernel fork
+
+Rifsxd For KernelSU-Next
+
+and sidex15 For his backport of susfs
