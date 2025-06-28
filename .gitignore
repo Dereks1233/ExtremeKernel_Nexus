@@ -124,3 +124,6 @@ all.config
 
 # fetched Android config fragments
 kernel/configs/android-*.cfg
+out/vmlinux
+toolchain/neutron_18/bin/
+toolchain/neutron_18/lib/
