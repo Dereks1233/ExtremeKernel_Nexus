@@ -127,3 +127,7 @@ kernel/configs/android-*.cfg
 out/vmlinux
 toolchain/neutron_18/bin/
 toolchain/neutron_18/lib/
+out/
+out/
+toolchain/neutron_18/lib/
+toolchain/neutron_18/bin/
