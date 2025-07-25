@@ -441,7 +441,7 @@ static int filldir64(struct dir_context *ctx, const char *name, int namlen,
 	if (buf->is_base_dentry_android_data_root_dir) {
 		if (susfs_is_sus_android_data_d_name_found(name)) {
 			return 0;
-		}	
+		}
 	} else if (buf->is_base_dentry_sdcard_root_dir) {
 		if (susfs_is_sus_sdcard_d_name_found(name)) {
 			return 0;
